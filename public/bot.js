@@ -1,107 +1,56 @@
-// ── Stockfish UCI wrapper ─────────────────────────────────────────────────────
-// Uses a persistent Web Worker so the engine stays warm between moves.
+// ── Pure JS chess engine bot ──────────────────────────────────────────────────
+// Uses engine-worker.js (minimax + alpha-beta, no WASM) so it works everywhere.
 
 const DIFFICULTY = {
-  easy:       { skillLevel: 1,  elo: 800,  movetime: 150,  randomChance: 0.45 },
-  medium:     { skillLevel: 8,  elo: 1400, movetime: 500,  randomChance: 0    },
-  hard:       { skillLevel: 16, elo: 2000, movetime: 1500, randomChance: 0    },
-  impossible: { skillLevel: 20, elo: 3200, movetime: 3000, randomChance: 0    },
+  easy:       { depth: 1, randomChance: 0.6 },  // mostly random, occasional 1-ply look
+  medium:     { depth: 2, randomChance: 0.0 },  // solid 2-ply
+  hard:       { depth: 3, randomChance: 0.0 },  // 3-ply with pruning
+  impossible: { depth: 4, randomChance: 0.0 },  // 4-ply — strong
 };
 
-let sfWorker    = null;   // the persistent Stockfish Web Worker
-let sfReady     = false;  // true once 'uciok' received
-let sfCallback  = null;   // function(from, to) waiting for bestmove
-let sfQueue     = [];     // commands buffered before worker is ready
+let engineWorker   = null;
+let engineCallback = null;
 
 // ── Initialise the worker (called once) ──────────────────────────────────────
 
-function initStockfish() {
-  if (sfWorker) return;
+function initEngine() {
+  if (engineWorker) return;
 
-  // Pass the absolute WASM URL via hash so the worker finds it correctly
-  // regardless of what subdirectory the page is served from (e.g. GitHub Pages)
-  const wasmUrl = encodeURIComponent(new URL('assets/stockfish.wasm', location.href).href);
-  sfWorker = new Worker(`assets/stockfish.js#${wasmUrl},worker`);
+  engineWorker = new Worker('assets/engine-worker.js');
 
-  sfWorker.onmessage = (e) => {
-    const line = typeof e.data === 'string' ? e.data : '';
-    console.log('[SF]', line);  // ← temporary: log everything
-
-    if (line.trim() === 'uciok') {
-      console.log('[SF] ready — flushing', sfQueue.length, 'queued commands');
-      sfReady = true;
-      sfQueue.forEach(cmd => sfWorker.postMessage(cmd));
-      sfQueue = [];
-      return;
-    }
-
-    if (line.startsWith('bestmove') && typeof sfCallback === 'function') {
-      const parts = line.split(' ');
-      const move  = parts[1];
-      if (!move || move === '(none)') {
-        sfCallback = null;
-        return;
-      }
-      const from = move.slice(0, 2);
-      const to   = move.slice(2, 4);
-      const cb   = sfCallback;
-      sfCallback = null;
-      cb(from, to);
+  engineWorker.onmessage = (e) => {
+    if (typeof engineCallback === 'function' && e.data) {
+      const cb = engineCallback;
+      engineCallback = null;
+      cb(e.data.from, e.data.to);
     }
   };
 
-  sfWorker.onerror = (err) => {
-    console.warn('Stockfish worker error:', err.message, '| file:', err.filename, '| line:', err.lineno);
+  engineWorker.onerror = (err) => {
+    console.error('Engine worker error:', err.message);
   };
-
-  sfWorker.postMessage('uci');
 }
 
-// ── Send a command (queued until ready) ──────────────────────────────────────
-
-function sfSend(cmd) {
-  if (!sfWorker) initStockfish();
-  if (sfReady) {
-    sfWorker.postMessage(cmd);
-  } else {
-    sfQueue.push(cmd);
-  }
-}
-
-// ── Public API called by board.js ─────────────────────────────────────────────
-// botMove(fen, difficulty, callback)
-//   fen        — current position
-//   difficulty — 'easy' | 'medium' | 'hard' | 'impossible'
-//   callback   — function(from, to) called when the engine picks a move
+// ── Public API ────────────────────────────────────────────────────────────────
 
 function botMove(fen, difficulty, callback) {
   const cfg = DIFFICULTY[difficulty] || DIFFICULTY.medium;
 
-  // Easy mode: sometimes just play a random legal move
+  // Easy mode: sometimes just pick a random legal move
   if (cfg.randomChance > 0 && Math.random() < cfg.randomChance) {
     const tmp   = new Chess(fen);
     const moves = tmp.moves({ verbose: true });
     if (moves.length) {
       const pick = moves[Math.floor(Math.random() * moves.length)];
-      // Small delay so it doesn't feel instant
-      setTimeout(() => callback(pick.from, pick.to), 120 + Math.random() * 150);
+      setTimeout(() => callback(pick.from, pick.to), 120 + Math.random() * 180);
       return;
     }
   }
 
-  // Make sure the worker is alive
-  initStockfish();
-
-  // Register callback before sending commands
-  sfCallback = callback;
-
-  sfSend('ucinewgame');
-  sfSend(`setoption name Skill Level value ${cfg.skillLevel}`);
-  sfSend(`setoption name UCI_LimitStrength value true`);
-  sfSend(`setoption name UCI_Elo value ${cfg.elo}`);
-  sfSend(`position fen ${fen}`);
-  sfSend(`go movetime ${cfg.movetime}`);
+  initEngine();
+  engineCallback = callback;
+  engineWorker.postMessage({ fen, depth: cfg.depth });
 }
 
-// Pre-warm the engine as soon as the page loads so the first move isn't slow
-initStockfish();
+// Pre-warm the worker on page load
+initEngine();
