@@ -1,20 +1,22 @@
 // ── Board renderer & game controller ─────────────────────────────────────────
 // Depends on: chess.js (CDN), GameState (main.js), botMove() (bot.js)
 
-// Use only the filled glyphs for both colors — CSS handles the coloring
+// ︎ is the Unicode text variation selector — forces iOS/Safari to render
+// these glyphs as plain text (respecting CSS color) instead of as emoji.
+const TV = '︎';
 const PIECE_GLYPHS = {
-  wK:'♚', wQ:'♛', wR:'♜', wB:'♝', wN:'♞', wP:'♟',
-  bK:'♚', bQ:'♛', bR:'♜', bB:'♝', bN:'♞', bP:'♟',
+  wK:'♚'+TV, wQ:'♛'+TV, wR:'♜'+TV, wB:'♝'+TV, wN:'♞'+TV, wP:'♟'+TV,
+  bK:'♚'+TV, bQ:'♛'+TV, bR:'♜'+TV, bB:'♝'+TV, bN:'♞'+TV, bP:'♟'+TV,
 };
 
-const CAPTURE_GLYPHS = { p:'♟', n:'♞', b:'♝', r:'♜', q:'♛', k:'♚' };
+const CAPTURE_GLYPHS = { p:'♟'+TV, n:'♞'+TV, b:'♝'+TV, r:'♜'+TV, q:'♛'+TV, k:'♚'+TV };
 
 // Promotion piece options (value → display glyph label)
 const PROMO_PIECES = [
-  { value:'q', label:'♛', name:'Queen'  },
-  { value:'r', label:'♜', name:'Rook'   },
-  { value:'b', label:'♝', name:'Bishop' },
-  { value:'n', label:'♞', name:'Knight' },
+  { value:'q', label:'♛'+TV, name:'Queen'  },
+  { value:'r', label:'♜'+TV, name:'Rook'   },
+  { value:'b', label:'♝'+TV, name:'Bishop' },
+  { value:'n', label:'♞'+TV, name:'Knight' },
 ];
 
 let chess             = null;
