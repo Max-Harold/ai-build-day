@@ -18,7 +18,10 @@ let sfQueue     = [];     // commands buffered before worker is ready
 function initStockfish() {
   if (sfWorker) return;
 
-  sfWorker = new Worker('assets/stockfish.js');
+  // Pass the absolute WASM URL via hash so the worker finds it correctly
+  // regardless of what subdirectory the page is served from (e.g. GitHub Pages)
+  const wasmUrl = encodeURIComponent(new URL('assets/stockfish.wasm', location.href).href);
+  sfWorker = new Worker(`assets/stockfish.js#${wasmUrl},worker`);
 
   sfWorker.onmessage = (e) => {
     const line = typeof e.data === 'string' ? e.data : '';
