@@ -18,7 +18,7 @@ let sfQueue     = [];     // commands buffered before worker is ready
 function initStockfish() {
   if (sfWorker) return;
 
-  sfWorker = new Worker('/assets/stockfish.js');
+  sfWorker = new Worker('assets/stockfish.js');
 
   sfWorker.onmessage = (e) => {
     const line = typeof e.data === 'string' ? e.data : '';
