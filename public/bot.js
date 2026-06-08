@@ -47,7 +47,7 @@ function initStockfish() {
   };
 
   sfWorker.onerror = (err) => {
-    console.warn('Stockfish worker error:', err);
+    console.warn('Stockfish worker error:', err.message, '| file:', err.filename, '| line:', err.lineno);
   };
 
   // Kick off UCI handshake
