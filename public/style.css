@@ -355,25 +355,16 @@ body {
   border: 6px solid rgba(0, 0, 0, 0.18);
 }
 
-/* ── Pieces ─────────────────────────────────────────── */
+/* ── Pieces (SVG images — no Unicode colour issues) ──── */
 .piece {
-  font-size: calc(var(--sq) * 0.76);
-  line-height: 1;
+  width:  calc(var(--sq) * 0.88);
+  height: calc(var(--sq) * 0.88);
   z-index: 1;
-  transition: transform 0.1s;
   pointer-events: none;
-}
-
-/* White pieces: filled white with a dark outline */
-.piece-w {
-  color: #ffffff;
-  filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 1px 3px rgba(0,0,0,0.7));
-}
-
-/* Black pieces: filled dark with a light outline */
-.piece-b {
-  color: #1a1a1a;
-  filter: drop-shadow(0 0 1px rgba(255,255,255,0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+  user-select: none;
+  transition: transform 0.1s;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  display: block;
 }
 
 .sq:hover .piece { transform: scale(1.08); }

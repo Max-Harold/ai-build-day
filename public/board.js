@@ -1,17 +1,13 @@
 // ── Board renderer & game controller ─────────────────────────────────────────
 // Depends on: chess.js (CDN), GameState (main.js), botMove() (bot.js)
 
-// ︎ is the Unicode text variation selector — forces iOS/Safari to render
-// these glyphs as plain text (respecting CSS color) instead of as emoji.
-const TV = '︎';
-const PIECE_GLYPHS = {
-  wK:'♚'+TV, wQ:'♛'+TV, wR:'♜'+TV, wB:'♝'+TV, wN:'♞'+TV, wP:'♟'+TV,
-  bK:'♚'+TV, bQ:'♛'+TV, bR:'♜'+TV, bB:'♝'+TV, bN:'♞'+TV, bP:'♟'+TV,
-};
+// SVG piece images (Lichess cburnett set, CC BY-SA 4.0)
+const PIECE_SVG = (color, type) => `assets/pieces/${color}${type.toUpperCase()}.svg`;
 
+// Unicode glyphs used only for captures bar and promotion picker (small, decorative)
+const TV = '︎';
 const CAPTURE_GLYPHS = { p:'♟'+TV, n:'♞'+TV, b:'♝'+TV, r:'♜'+TV, q:'♛'+TV, k:'♚'+TV };
 
-// Promotion piece options (value → display glyph label)
 const PROMO_PIECES = [
   { value:'q', label:'♛'+TV, name:'Queen'  },
   { value:'r', label:'♜'+TV, name:'Rook'   },
@@ -235,13 +231,14 @@ function renderBoard() {
       dot.className = 'move-dot';
       div.appendChild(dot);
 
-      // Piece
+      // Piece — SVG image for cross-platform consistency
       if (piece) {
-        const span = document.createElement('span');
-        const side = piece.color === 'w' ? 'w' : 'b';
-        span.className = 'piece piece-' + side;
-        span.textContent = PIECE_GLYPHS[side + piece.type.toUpperCase()];
-        div.appendChild(span);
+        const img = document.createElement('img');
+        img.className = 'piece';
+        img.src = PIECE_SVG(piece.color, piece.type);
+        img.alt = piece.color + piece.type;
+        img.draggable = false;
+        div.appendChild(img);
       }
 
       div.addEventListener('click', () => onSquareClick(sq));
