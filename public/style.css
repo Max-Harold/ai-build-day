@@ -1,0 +1,796 @@
+/* ── Theme variables ────────────────────────────────────
+   Dark mode is the default. Light mode is applied by
+   adding the class "light" to <body>.
+───────────────────────────────────────────────────────── */
+:root {
+  --text:           #ffffff;
+  --text-dim:       rgba(255,255,255,0.55);
+  --surface:        rgba(255,255,255,0.06);
+  --surface-hover:  rgba(255,255,255,0.13);
+  --border:         rgba(255,255,255,0.12);
+  --border-hover:   rgba(100,160,255,0.5);
+  --glow:           rgba(60,120,255,0.2);
+  --card-bg:        rgba(15,20,40,0.9);
+  --card-border:    rgba(255,255,255,0.15);
+  --resign-color:   rgba(255,255,255,0.45);
+  --resign-border:  rgba(255,255,255,0.15);
+  --speed-color:    rgba(255,255,255,0.55);
+  --active-turn-bg: rgba(255,255,255,0.06);
+  --active-turn-shadow: rgba(180,220,255,0.15);
+  --coord-light:    #a07848;
+  --coord-dark:     #e8d5b0;
+}
+
+body.light {
+  --text:           #1a1a2e;
+  --text-dim:       rgba(20,20,50,0.55);
+  --surface:        rgba(0,0,0,0.05);
+  --surface-hover:  rgba(0,0,0,0.10);
+  --border:         rgba(0,0,0,0.14);
+  --border-hover:   rgba(40,100,200,0.55);
+  --glow:           rgba(40,100,200,0.15);
+  --card-bg:        rgba(240,245,255,0.92);
+  --card-border:    rgba(0,0,0,0.12);
+  --resign-color:   rgba(20,20,50,0.45);
+  --resign-border:  rgba(0,0,0,0.18);
+  --speed-color:    rgba(20,20,50,0.6);
+  --active-turn-bg: rgba(0,0,0,0.05);
+  --active-turn-shadow: rgba(60,120,220,0.18);
+  --coord-light:    #a07848;
+  --coord-dark:     #e8d5b0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #000;
+  color: var(--text);
+  user-select: none;
+  transition: color 0.3s;
+}
+
+/* ── Canvas background ──────────────────────────────── */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* ── App shell ──────────────────────────────────────── */
+#app {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100vh;
+}
+
+/* ── Screen transitions ─────────────────────────────── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(18px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+.screen.exit {
+  opacity: 0;
+  transform: translateY(-18px);
+}
+
+/* ── Title ──────────────────────────────────────────── */
+.title {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 60px rgba(100, 160, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.screen-title {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 30px rgba(100, 160, 255, 0.4);
+}
+
+.subtitle {
+  font-size: 1rem;
+  opacity: 0.55;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Button group ───────────────────────────────────── */
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(420px, 90vw);
+  margin-top: 8px;
+}
+
+/* ── Menu buttons ───────────────────────────────────── */
+.menu-btn {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 0 12px;
+  padding: 18px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  backdrop-filter: blur(12px);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s, color 0.3s;
+}
+
+.menu-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px var(--glow);
+}
+
+.menu-btn:active {
+  transform: translateY(0px);
+}
+
+.btn-icon {
+  grid-row: 1 / 3;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-label {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.btn-sub {
+  font-size: 0.8rem;
+  opacity: 0.5;
+  font-weight: 400;
+}
+
+/* Difficulty button accent colours */
+.difficulty-btn[data-level="easy"]:hover      { border-color: rgba(80, 220, 120, 0.6); box-shadow: 0 8px 32px rgba(80, 220, 120, 0.15); }
+.difficulty-btn[data-level="medium"]:hover    { border-color: rgba(255, 200, 50, 0.6);  box-shadow: 0 8px 32px rgba(255, 200, 50, 0.15); }
+.difficulty-btn[data-level="hard"]:hover      { border-color: rgba(255, 100, 60, 0.6);  box-shadow: 0 8px 32px rgba(255, 100, 60, 0.15); }
+.difficulty-btn[data-level="impossible"]:hover{ border-color: rgba(180, 60, 255, 0.6);  box-shadow: 0 8px 32px rgba(180, 60, 255, 0.15); }
+
+/* ── Color picker ───────────────────────────────────── */
+.color-picker {
+  display: flex;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.color-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s, color 0.3s;
+  min-width: 140px;
+}
+
+.color-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 36px var(--glow);
+}
+
+.color-btn:active { transform: translateY(0); }
+
+.color-piece {
+  font-size: 3.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+}
+
+.color-sub {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  font-weight: 400;
+}
+
+/* ── Back button ────────────────────────────────────── */
+.back-btn {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s, transform 0.15s, color 0.3s, border-color 0.3s;
+}
+
+.back-btn:hover {
+  background: var(--surface-hover);
+  transform: translateX(-2px);
+}
+
+/* ── Game screen layout ─────────────────────────────── */
+#screen-game {
+  justify-content: center;
+  gap: 0;
+}
+
+#game-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 52px; /* clear back button */
+}
+
+/* ── Player bars ────────────────────────────────────── */
+.player-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: var(--board-size, min(72vh, 72vw));
+  min-height: 28px;
+}
+
+.player-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  opacity: 0.85;
+  letter-spacing: 0.03em;
+}
+
+.captures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  font-size: 1rem;
+  opacity: 0.6;
+}
+
+/* ── Board wrapper + coordinates ────────────────────── */
+#board-wrap {
+  position: relative;
+}
+
+#board {
+  --sq: calc(var(--board-size, min(72vh, 72vw)) / 8);
+  display: grid;
+  grid-template-columns: repeat(8, var(--sq));
+  grid-template-rows:    repeat(8, var(--sq));
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* ── Squares ────────────────────────────────────────── */
+.sq {
+  width:  var(--sq);
+  height: var(--sq);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.sq.light { background: #e8d5b0; }
+.sq.dark  { background: #a07848; }
+
+/* Last-move tint */
+.sq.last-move.light { background: #cdd16a; }
+.sq.last-move.dark  { background: #a4a830; }
+
+/* Selected square */
+.sq.selected.light { background: #f6f669; }
+.sq.selected.dark  { background: #baca2b; }
+
+/* King in check */
+.sq.in-check { background: radial-gradient(circle, #ff4444 0%, #cc0000 60%, transparent 100%); }
+
+/* ── Legal move dots ────────────────────────────────── */
+.sq .move-dot {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Empty square: small centre dot */
+.sq.legal-move .move-dot {
+  width:  28%;
+  height: 28%;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* Capture square: hollow ring */
+.sq.legal-capture .move-dot {
+  width:  94%;
+  height: 94%;
+  background: transparent;
+  border: 6px solid rgba(0, 0, 0, 0.18);
+}
+
+/* ── Pieces ─────────────────────────────────────────── */
+.piece {
+  font-size: calc(var(--sq) * 0.76);
+  line-height: 1;
+  z-index: 1;
+  transition: transform 0.1s;
+  pointer-events: none;
+}
+
+/* White pieces: filled white with a dark outline */
+.piece-w {
+  color: #ffffff;
+  filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+}
+
+/* Black pieces: filled dark with a light outline */
+.piece-b {
+  color: #1a1a1a;
+  filter: drop-shadow(0 0 1px rgba(255,255,255,0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+}
+
+.sq:hover .piece { transform: scale(1.08); }
+
+/* ── Coordinate labels ──────────────────────────────── */
+.coord {
+  position: absolute;
+  font-size: calc(var(--sq) * 0.22);
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 3;
+}
+.coord.rank { bottom: 2px; left: 3px; }
+.coord.file { top: 2px; right: 3px; }
+.sq.light .coord { color: #a07848; }
+.sq.dark  .coord { color: #e8d5b0; }
+
+/* ── Player bar — active turn glow ──────────────────── */
+.player-bar {
+  border-radius: 10px;
+  padding: 4px 8px;
+  transition: box-shadow 0.3s, background 0.3s;
+}
+
+.player-bar.active-turn {
+  background: var(--active-turn-bg);
+  box-shadow: 0 0 0 1px var(--border),
+              0 0 18px var(--active-turn-shadow);
+}
+
+.player-bar.active-turn .player-name {
+  opacity: 1;
+}
+
+/* ── Status bar ─────────────────────────────────────── */
+#status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: var(--board-size, min(72vh, 72vw));
+  margin-top: 4px;
+  height: 32px;
+}
+
+#status-text {
+  font-size: 0.88rem;
+  opacity: 0.6;
+  letter-spacing: 0.04em;
+}
+
+/* ── Resign button ───────────────────────────────────── */
+#btn-resign {
+  background: transparent;
+  border: 1px solid var(--resign-border);
+  color: var(--resign-color);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: none; /* shown only during active game */
+}
+
+#btn-resign.visible {
+  display: inline-block;
+}
+
+/* ── Speed controls (Bot vs Bot) ────────────────────── */
+#speed-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#speed-controls.hidden { display: none; }
+
+.speed-label {
+  font-size: 0.75rem;
+  opacity: 0.45;
+  letter-spacing: 0.06em;
+  margin-right: 2px;
+}
+
+.speed-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.15);
+  margin: 0 4px;
+}
+
+/* ── Pause button ────────────────────────────────────── */
+#btn-bvb-pause {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.8);
+  width: 34px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+#btn-bvb-pause:hover {
+  background: rgba(255,255,255,0.14);
+}
+
+#btn-bvb-pause.paused {
+  background: rgba(255, 200, 60, 0.18);
+  border-color: rgba(255, 200, 60, 0.5);
+  color: #ffd060;
+}
+
+.speed-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--speed-color);
+  width: 34px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.speed-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.speed-btn.active {
+  background: rgba(100, 180, 255, 0.18);
+  border-color: rgba(100, 180, 255, 0.5);
+  color: #fff;
+}
+
+/* ── Bot vs Bot setup screen ─────────────────────────── */
+.bvb-setup {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.bvb-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(180px, 38vw);
+}
+
+.bvb-side-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.bvb-piece {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.bvb-diff-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.bvb-diff-btn {
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.bvb-diff-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  transform: translateX(2px);
+}
+
+.bvb-diff-btn.active {
+  background: rgba(100, 180, 255, 0.15);
+  border-color: rgba(100, 180, 255, 0.45);
+  color: #fff;
+}
+
+.bvb-vs {
+  font-size: 1.4rem;
+  font-weight: 900;
+  opacity: 0.3;
+  align-self: center;
+  letter-spacing: 0.1em;
+  padding-top: 32px;
+}
+
+.start-bvb-btn {
+  margin-top: 20px;
+  padding: 14px 48px;
+  background: rgba(100, 180, 255, 0.15);
+  border: 1px solid rgba(100, 180, 255, 0.4);
+  border-radius: 14px;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s, color 0.3s;
+}
+
+.start-bvb-btn:hover {
+  background: rgba(100, 180, 255, 0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(60, 140, 255, 0.25);
+}
+
+#btn-resign:hover {
+  background: rgba(220, 60, 60, 0.15);
+  border-color: rgba(220, 60, 60, 0.5);
+  color: rgba(255, 120, 120, 0.9);
+}
+
+/* ── Game-over overlay ──────────────────────────────── */
+#gameover-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  z-index: 10;
+  animation: fadeIn 0.4s ease;
+}
+
+#gameover-overlay.hidden { display: none; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+#gameover-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  padding: 40px 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.4);
+  text-align: center;
+  color: var(--text);
+}
+
+#gameover-icon { font-size: 3.5rem; }
+#gameover-title { font-size: 2rem; font-weight: 800; }
+#gameover-msg   { font-size: 1rem; opacity: 0.6; }
+
+.gameover-btns {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.gameover-btns button {
+  padding: 12px 30px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, color 0.3s;
+}
+
+.gameover-btns button:hover {
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+
+#btn-rematch {
+  border-color: rgba(100, 200, 100, 0.4) !important;
+}
+
+/* ── Promotion overlay ───────────────────────────────── */
+#promotion-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  z-index: 20;
+  animation: fadeIn 0.25s ease;
+}
+
+#promotion-overlay.hidden { display: none; }
+
+#promotion-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 28px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  color: var(--text);
+}
+
+.promotion-title {
+  font-size: 1rem;
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+}
+
+#promotion-choices {
+  display: flex;
+  gap: 12px;
+}
+
+.promotion-choice {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, border-color 0.15s;
+}
+
+.promotion-choice:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-3px) scale(1.08);
+}
+
+/* ── Check flash animation ───────────────────────────── */
+@keyframes checkPulse {
+  0%   { box-shadow: inset 0 0 0 0 rgba(255,60,60,0.6); }
+  50%  { box-shadow: inset 0 0 20px 4px rgba(255,60,60,0.5); }
+  100% { box-shadow: inset 0 0 0 0 rgba(255,60,60,0); }
+}
+
+.sq.check-flash {
+  animation: checkPulse 0.5s ease;
+}
+
+/* ── Theme toggle button ─────────────────────────────── */
+#btn-theme {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.15rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.15s, border-color 0.2s;
+}
+
+#btn-theme:hover {
+  background: var(--surface-hover);
+  transform: scale(1.1) rotate(15deg);
+}
+
+/* ── Light-mode background tweak ────────────────────── */
+body.light #board {
+  border-color: rgba(0,0,0,0.2);
+  box-shadow: 0 20px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+body.light #btn-bvb-pause {
+  border-color: rgba(0,0,0,0.18);
+  color: rgba(20,20,50,0.8);
+}
+
+body.light #btn-bvb-pause.paused {
+  background: rgba(200, 150, 20, 0.15);
+  border-color: rgba(200, 150, 20, 0.5);
+  color: #b07800;
+}
+
+body.light .speed-divider {
+  background: rgba(0,0,0,0.15);
+}
+

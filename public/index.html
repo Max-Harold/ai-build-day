@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chess</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Theme toggle — always visible over every screen -->
+  <button id="btn-theme" title="Toggle light / dark mode">🌙</button>
+
+  <div id="app">
+
+    <!-- Main Menu -->
+    <div id="screen-menu" class="screen active">
+      <h1 class="title">♟ Chess</h1>
+      <p class="subtitle">Choose a mode to play</p>
+      <div class="btn-group">
+        <button class="menu-btn" id="btn-2player">
+          <span class="btn-icon">👥</span>
+          <span class="btn-label">2 Player</span>
+          <span class="btn-sub">Local · same computer</span>
+        </button>
+        <button class="menu-btn" id="btn-vsbot">
+          <span class="btn-icon">🤖</span>
+          <span class="btn-label">vs Bot</span>
+          <span class="btn-sub">Play against the AI</span>
+        </button>
+        <button class="menu-btn" id="btn-bvb">
+          <span class="btn-icon">🆚</span>
+          <span class="btn-label">Bot vs Bot</span>
+          <span class="btn-sub">Watch two AIs battle it out</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bot Difficulty Screen (vs player) -->
+    <div id="screen-difficulty" class="screen">
+      <button class="back-btn" id="btn-back-difficulty">← Back</button>
+      <h2 class="screen-title">Choose Difficulty</h2>
+      <p class="subtitle">How tough do you want it?</p>
+      <div class="btn-group">
+        <button class="menu-btn difficulty-btn" data-level="easy">
+          <span class="btn-icon">🌱</span>
+          <span class="btn-label">Easy</span>
+          <span class="btn-sub">Makes mistakes, good for beginners</span>
+        </button>
+        <button class="menu-btn difficulty-btn" data-level="medium">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-label">Medium</span>
+          <span class="btn-sub">Solid play, a fair challenge</span>
+        </button>
+        <button class="menu-btn difficulty-btn" data-level="hard">
+          <span class="btn-icon">🔥</span>
+          <span class="btn-label">Hard</span>
+          <span class="btn-sub">Strong moves, tough to beat</span>
+        </button>
+        <button class="menu-btn difficulty-btn" data-level="impossible">
+          <span class="btn-icon">💀</span>
+          <span class="btn-label">Impossible</span>
+          <span class="btn-sub">Full engine strength — good luck</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Color Picker Screen -->
+    <div id="screen-color" class="screen">
+      <button class="back-btn" id="btn-back-color">← Back</button>
+      <h2 class="screen-title">Choose Your Color</h2>
+      <p class="subtitle">Which side do you want to play?</p>
+      <div class="color-picker">
+        <button class="color-btn" data-color="white">
+          <span class="color-piece">♔</span>
+          <span>White</span>
+          <span class="color-sub">You go first</span>
+        </button>
+        <button class="color-btn" data-color="black">
+          <span class="color-piece">♚</span>
+          <span>Black</span>
+          <span class="color-sub">Bot goes first</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bot vs Bot Setup Screen -->
+    <div id="screen-bvb" class="screen">
+      <button class="back-btn" id="btn-back-bvb">← Back</button>
+      <h2 class="screen-title">Bot vs Bot</h2>
+      <p class="subtitle">Choose a difficulty for each side</p>
+
+      <div class="bvb-setup">
+
+        <!-- White bot picker -->
+        <div class="bvb-side">
+          <div class="bvb-side-label">
+            <span class="bvb-piece piece-w">♚</span>
+            <span>White</span>
+          </div>
+          <div class="bvb-diff-list" id="bvb-white-list">
+            <button class="bvb-diff-btn active" data-side="white" data-level="easy">🌱 Easy</button>
+            <button class="bvb-diff-btn" data-side="white" data-level="medium">⚡ Medium</button>
+            <button class="bvb-diff-btn" data-side="white" data-level="hard">🔥 Hard</button>
+            <button class="bvb-diff-btn" data-side="white" data-level="impossible">💀 Impossible</button>
+          </div>
+        </div>
+
+        <div class="bvb-vs">VS</div>
+
+        <!-- Black bot picker -->
+        <div class="bvb-side">
+          <div class="bvb-side-label">
+            <span class="bvb-piece piece-b">♚</span>
+            <span>Black</span>
+          </div>
+          <div class="bvb-diff-list" id="bvb-black-list">
+            <button class="bvb-diff-btn active" data-side="black" data-level="easy">🌱 Easy</button>
+            <button class="bvb-diff-btn" data-side="black" data-level="medium">⚡ Medium</button>
+            <button class="bvb-diff-btn" data-side="black" data-level="hard">🔥 Hard</button>
+            <button class="bvb-diff-btn" data-side="black" data-level="impossible">💀 Impossible</button>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="start-bvb-btn" id="btn-start-bvb">▶ Start Game</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="screen-game" class="screen">
+      <button class="back-btn" id="btn-back-game">← Menu</button>
+
+      <div id="game-layout">
+
+        <!-- Top player info -->
+        <div class="player-bar" id="player-top">
+          <span class="player-name" id="name-top">Black</span>
+          <div class="captures" id="captures-top"></div>
+        </div>
+
+        <!-- Board wrapper -->
+        <div id="board-wrap">
+          <div id="board"></div>
+        </div>
+
+        <!-- Bottom player info -->
+        <div class="player-bar" id="player-bottom">
+          <span class="player-name" id="name-bottom">White</span>
+          <div class="captures" id="captures-bottom"></div>
+        </div>
+
+        <!-- Status bar (resign for human modes, speed for bvb) -->
+        <div id="status-bar">
+          <span id="status-text">White's turn</span>
+          <button id="btn-resign" title="Resign">⚑ Resign</button>
+          <div id="speed-controls" class="hidden">
+            <button id="btn-bvb-pause" title="Pause / Resume">⏸</button>
+            <span class="speed-divider"></span>
+            <span class="speed-label">Speed</span>
+            <button class="speed-btn" data-speed="slow"    title="Slow">🐢</button>
+            <button class="speed-btn" data-speed="normal"  title="Normal">▶</button>
+            <button class="speed-btn active" data-speed="fast"    title="Fast">⚡</button>
+            <button class="speed-btn" data-speed="instant" title="Instant">⚡⚡</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Promotion picker overlay -->
+      <div id="promotion-overlay" class="hidden">
+        <div id="promotion-card">
+          <p class="promotion-title">Promote pawn to…</p>
+          <div id="promotion-choices"></div>
+        </div>
+      </div>
+
+      <!-- Game-over overlay -->
+      <div id="gameover-overlay" class="hidden">
+        <div id="gameover-card">
+          <div id="gameover-icon">♟</div>
+          <h2 id="gameover-title">Game Over</h2>
+          <p id="gameover-msg"></p>
+          <div class="gameover-btns">
+            <button id="btn-rematch">Rematch</button>
+            <button id="btn-menu-from-over">Menu</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="background.js"></script>
+  <script src="main.js"></script>
+  <script src="board.js"></script>
+  <script src="bot.js"></script>
+</body>
+</html>
