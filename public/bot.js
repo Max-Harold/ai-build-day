@@ -25,10 +25,11 @@ function initStockfish() {
 
   sfWorker.onmessage = (e) => {
     const line = typeof e.data === 'string' ? e.data : '';
+    console.log('[SF]', line);  // ← temporary: log everything
 
-    if (line === 'uciok') {
+    if (line.trim() === 'uciok') {
+      console.log('[SF] ready — flushing', sfQueue.length, 'queued commands');
       sfReady = true;
-      // Flush any commands that arrived before uciok
       sfQueue.forEach(cmd => sfWorker.postMessage(cmd));
       sfQueue = [];
       return;
@@ -36,7 +37,7 @@ function initStockfish() {
 
     if (line.startsWith('bestmove') && typeof sfCallback === 'function') {
       const parts = line.split(' ');
-      const move  = parts[1];           // e.g. "e2e4" or "e7e8q"
+      const move  = parts[1];
       if (!move || move === '(none)') {
         sfCallback = null;
         return;
@@ -53,7 +54,6 @@ function initStockfish() {
     console.warn('Stockfish worker error:', err.message, '| file:', err.filename, '| line:', err.lineno);
   };
 
-  // Kick off UCI handshake
   sfWorker.postMessage('uci');
 }
 
